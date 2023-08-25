@@ -1,0 +1,89 @@
+<phyphox xmlns="http://phyphox.org/xml" xmlns:editor="http://phyphox.org/editor/xml" version="1.7" editor:version="1.0" locale="en">
+    <title>Pressure, Height</title>
+    <category>phyphox satellite box</category>
+    <color>628E3D</color>
+    <description>Shows the raw pressure data and calculates the height</description>
+	<translations>	
+		<translation locale="de">
+				<title>Druck, Höhe</title>
+				<category>phyphox Satelliten-Box</category>
+				<description>Zeigt die Rohdaten des Drucksensors und berechnet daraus die Höhe.</description>
+				<string original="time">Zeit</string>
+				<string original="pressure">Luftdruck</string>
+				<string original="height">Höhe</string>
+				<string original="t-p-plot">t-p-Diagramm</string>
+				<string original="t-h-plot">t-h-Diagramm</string>
+		</translation>
+	</translations>	
+    <data-containers>
+        <container size="0" static="false">pressure</container>
+        <container size="0" static="false">time_raw</container>
+        <container size="0" static="false">time</container>
+        <container size="0" static="false">height</container>
+		<container size="20" static="false">first20</container>
+		<container size="1" static="false">timeOffset</container>
+		<container size="1" static="false">averageFirst20</container>
+    </data-containers>
+    <input>
+        <bluetooth  name="Satellit"  mode="notification" rate="1" subscribeOnStart="false">
+            <config char="cddf1008-30f7-4671-8b43-5e40ba53514a" conversion="hexadecimal">01040105</config>
+            <output char="cddf1007-30f7-4671-8b43-5e40ba53514a" conversion="float32LittleEndian">pressure</output>
+            <output char="cddf1007-30f7-4671-8b43-5e40ba53514a" conversion="float32LittleEndian" offset="8">time_raw</output>
+        </bluetooth>
+    </input>
+    <output>
+    </output>
+    <analysis sleep="0"  onUserInput="false">
+	
+		<first>
+            <input as="value" clear="false">time_raw</input>
+            <output as="first">timeOffset</output>
+        </first>
+		<subtract>
+            <input as="minuend" clear="false">time_raw</input>
+            <input as="subtrahend" clear="false">timeOffset</input>
+            <output as="difference">time</output>			
+        </subtract>
+
+        <subrange>
+            <input as="in" clear="false">pressure</input>
+            <input as="from" type="value">0</input>
+            <input as="length" type="value">20</input>
+            <output as="out">first20</output>
+        </subrange>
+        <average>
+            <input as="buffer" clear="false">first20</input>
+            <output as="average">averageFirst20</output>
+        </average>
+        <formula formula="44330*(1-([1_]/[2])^(1/5.255))">
+            <input as="in" clear="false">pressure</input>
+            <input as="in" clear="false">averageFirst20</input>
+            <output as="out">height</output>
+        </formula>
+    </analysis>
+    <views>
+        <view label="Rawdata">
+            <graph label="t-p-plot" aspectRatio="2.5" style="lines" lineWidth="1" color="ff7e22" partialUpdate="false" history="1" labelX="time" labelY="pressure" labelZ="" unitX="s" unitY="hPa" unitZ="" logX="false" logY="false" logZ="false" xPrecision="3" yPrecision="2" zPrecision="3" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" scaleMinZ="auto" scaleMaxZ="auto" minX="0" maxX="0" minY="0" maxY="0" minZ="0" maxZ="0"  mapWidth="0"       >
+                <input axis="x">time</input>
+                <input axis="y">pressure</input>
+            </graph>
+            <value label="pressure" size="1" precision="2" scientific="false" unit="hPa" factor="1" >
+                <input>pressure</input>
+            </value>
+            <graph label="t-h-plot" aspectRatio="2.5" style="lines" lineWidth="1" color="ff7e22" partialUpdate="false" history="1" labelX="time" labelY="height" labelZ="" unitX="s" unitY="m" unitZ="" logX="false" logY="false" logZ="false" xPrecision="3" yPrecision="3" zPrecision="3" scaleMinX="auto" scaleMaxX="auto" scaleMinY="auto" scaleMaxY="auto" scaleMinZ="auto" scaleMaxZ="auto" minX="0" maxX="0" minY="0" maxY="0" minZ="0" maxZ="0"  mapWidth="0"       >
+                <input axis="x">time</input>
+                <input axis="y">height</input>
+            </graph>
+            <value label="height" size="1" precision="2" scientific="false" unit="m" factor="1" >
+                <input>height</input>
+            </value>		
+        </view>
+    </views>
+    <export>
+		<set name="Rawdata">
+			<data name="Time (s)">time</data>
+			<data name="pressure (hPa)">pressure</data>
+			<data name="height (m)">height</data>
+		</set>
+    </export>
+</phyphox>

@@ -1,0 +1,90 @@
+<phyphox version="1.12">
+    <title>Magnetometer</title>
+    <category>phyphox satellite box</category>
+	<color>628E3D</color>
+    <description>Shows the magnetometer rawdata.</description>
+	<translations>
+        <translation locale="de">
+			<title>Magnetometer</title>
+			<category>phyphox Satelliten-Box</category>
+			<description>Zeigt die Rohdaten das Magnetometers.</description>
+            <string original="magnetometer x">Magnetometer X</string>
+			<string original="magnetometer y">Magnetometer Y</string>
+			<string original="magnetometer z">Magnetometer Z</string>
+			<string original="Raw data">Rohdaten</string>
+			<string original="Rate">Rate</string>
+			<string original="time">Zeit</string>
+			<string original="magnetic flux density">Magnetische Flussdichte</string>
+        </translation>
+    </translations>
+    <data-containers>
+        <container size="0">time_raw</container>
+		<container size="0">time</container>
+		<container size="0">magX</container>
+		<container size="0">magY</container>
+		<container size="0">magZ</container>
+		
+		<container size="1">count</container>
+		<container size="1">first</container>
+		<container size="1">rate</container>
+		<container size="1">timeOffset</container>
+    </data-containers>
+    <input>
+        <bluetooth name="Satellit" mode="notification" mtu="150">
+			<config char="cddf100a-30f7-4671-8b43-5e40ba53514a" conversion="hexadecimal">0107020003030307</config>
+            <output char="cddf1009-30f7-4671-8b43-5e40ba53514a" offset="0" repeating="16" conversion="float32LittleEndian">magX</output>
+			<output char="cddf1009-30f7-4671-8b43-5e40ba53514a" offset="4" repeating="16" conversion="float32LittleEndian">magY</output>
+			<output char="cddf1009-30f7-4671-8b43-5e40ba53514a" offset="8" repeating="16" conversion="float32LittleEndian">magZ</output>
+			<output char="cddf1009-30f7-4671-8b43-5e40ba53514a" offset="12" repeating="16" conversion="float32LittleEndian">time_raw</output>
+        </bluetooth>
+    </input>
+    <views>
+        <view label="Raw data">
+            <graph label="magnetometer x" timeOnX="true" labelX="time" unitX="s" labelY="magnetic flux density" unitY="µT" partialUpdate="true">
+                <input axis="y">magX</input>
+                <input axis="x">time</input>
+            </graph>
+			<graph label="magnetometer y" timeOnX="true" labelX="time" unitX="s" labelY="magnetic flux density" unitY="µT" partialUpdate="true">
+                <input axis="y">magY</input>
+                <input axis="x">time</input>
+            </graph>
+			<graph label="magnetometer z" timeOnX="true" labelX="time" unitX="s" labelY="magnetic flux density" unitY="µT" partialUpdate="true">
+                <input axis="y">magZ</input>
+                <input axis="x">time</input>
+            </graph>
+        </view>
+		<view label="Rate">
+			<value label="Rate" unit="Hz" size="1" precision="1" scientific="false" factor="1" >
+                <input>rate</input>
+            </value>
+		</view>
+    </views>
+    <analysis optimization="true">
+		<first>
+            <input as="value" clear="false">time_raw</input>
+            <output as="first">timeOffset</output>
+        </first>
+		<subtract>
+            <input as="minuend" clear="false">time_raw</input>
+            <input as="subtrahend" clear="false">timeOffset</input>
+            <output as="difference">time</output>			
+        </subtract>
+        <count>
+            <input as="buffer" clear="false">magX</input>
+            <output as="count">count</output>
+        </count>
+        <formula formula="[2]/([1])">
+            <input as="in" clear="false">time</input>
+            <input as="in" clear="false">count</input>
+            <output as="out">rate</output>
+        </formula>
+    </analysis>
+    <export>
+        <set name="Raw Data">
+            <data name="Time (s)">time</data>
+            <data name="Magnetometer X">magX</data>
+			<data name="Magnetometer X">magY</data>
+			<data name="Magnetometer X">magZ</data>
+        </set>
+    </export>
+</phyphox>
